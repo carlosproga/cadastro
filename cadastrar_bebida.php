@@ -15,22 +15,34 @@ if ($conn->connect_error) {
 
 // Verifica se o formulário foi enviado
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nome = $_POST['nome'];
-    $descricao = $_POST['descricao'];
-    $tipo = $_POST['tipo'];
+    // Coleta os valores do formulário
+    $nome = isset($_POST['nome']) ? $_POST['nome'] : '';
+    $descricao = isset($_POST['descricao']) ? $_POST['descricao'] : '';
+    $tipo = isset($_POST['tipo']) ? $_POST['tipo'] : '';
 
     // Faz o upload da imagem
+    $imagem_destino = null;
     if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] == UPLOAD_ERR_OK) {
-        $imagem_nome = $_FILES['imagem']['name'];
+        $imagem_nome = basename($_FILES['imagem']['name']); // Usar basename para evitar problemas de caminho
         $imagem_temp = $_FILES['imagem']['tmp_name'];
         $imagem_destino = 'uploads/' . $imagem_nome;
+
+        // Verifica o tipo de arquivo e tamanho
+        $imagem_tipo = mime_content_type($imagem_temp);
+        $imagem_tamanho = $_FILES['imagem']['size'];
+        $tamanho_max = 2 * 1024 * 1024; // 2MB
+
+        // Tipos de imagem permitidos
+        $tipos_permitidos = ['image/jpeg', 'image/png', 'image/gif'];
+
+        if (!in_array($imagem_tipo, $tipos_permitidos) || $imagem_tamanho > $tamanho_max) {
+            die("Tipo de arquivo inválido ou arquivo muito grande.");
+        }
 
         // Move o arquivo para o diretório de uploads
         if (!move_uploaded_file($imagem_temp, $imagem_destino)) {
             die("Falha ao fazer upload da imagem.");
         }
-    } else {
-        $imagem_destino = null;
     }
 
     // Prepara e executa a consulta SQL
@@ -83,7 +95,7 @@ $conn->close();
             display: block;
             margin: 10px 0 5px;
         }
-        input[type="text"], input[type="file"], textarea {
+        input[type="text"], input[type="file"], input[type="number"], textarea {
             width: 100%;
             padding: 10px;
             margin-bottom: 10px;
@@ -114,13 +126,11 @@ $conn->close();
             <label for="nome">Nome da Bebida:</label>
             <input type="text" id="nome" name="nome" required>
 
-            <label for="tipo">Valor:</label>
+            <label for="valor">Valor:</label>
             <input type="number" id="valor" name="valor" required>
 
             <label for="descricao">Descrição:</label>
             <textarea id="descricao" name="descricao" rows="4" required></textarea>
-
-            
 
             <input type="submit" value="Cadastrar">
         </form>

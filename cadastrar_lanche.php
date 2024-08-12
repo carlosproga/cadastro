@@ -1,14 +1,12 @@
 <?php
 // Configurações do banco de dados
-$bt_imagem = ""
-$bt_nome = "localhost";
-$bt_valor = "root";
+$servername = "localhost";
+$username = "root";
+$password = ""; // Altere para a senha do seu banco de dados
 $dbname = "cadastrar_lanche";
-$bt_descricao = ""
-
 
 // Cria a conexão
-$conn = new mysqli($bt_nome, $bt_valor, $bt_descricao, $dbname);
+$conn = new mysqli($servername, $username, $password, $dbname);
 
 // Verifica a conexão
 if ($conn->connect_error) {
@@ -17,14 +15,15 @@ if ($conn->connect_error) {
 
 // Verifica se o formulário foi enviado
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $bt_nome = $_POST['nome'];
-    $bt_valor = $_POST['valor'];
-    $bt_descricao = $_POST['descricao'];
+    // Coleta os valores do formulário
+    $nome = $_POST['bt_nome'];
+    $valor = $_POST['bt_valor'];
+    $descricao = $_POST['bt_descricao'];
 
     // Faz o upload da imagem
-    if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] == UPLOAD_ERR_OK) {
-        $imagem_nome = $_FILES['imagem']['name'];
-        $imagem_temp = $_FILES['imagem']['tmp_name'];
+    if (isset($_FILES['bt_imagem']) && $_FILES['bt_imagem']['error'] == UPLOAD_ERR_OK) {
+        $imagem_nome = $_FILES['bt_imagem']['name'];
+        $imagem_temp = $_FILES['bt_imagem']['tmp_name'];
         $imagem_destino = 'uploads/' . $imagem_nome;
 
         // Move o arquivo para o diretório de uploads
@@ -36,8 +35,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Prepara e executa a consulta SQL
-    $stmt = $conn->prepare("INSERT INTO lanches (nome, descricao, tipo, imagem) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $nome, $descricao, $tipo, $imagem_destino);
+    $stmt = $conn->prepare("INSERT INTO lanches (nome, descricao, valor, imagem) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $nome, $descricao, $valor, $imagem_destino);
 
     if ($stmt->execute()) {
         echo "Cadastro realizado com sucesso!";
@@ -50,28 +49,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 // Fecha a conexão
 $conn->close();
-?>
-
-<?php
-// Processar os dados do formulário quando o formulário for enviado
-
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-// Coletar valores do formulário
-    
-    $bt_nome = htmlspecialchars($_POST['nome']);
-    $bt_valor = htmlspecialchars($_POST['valor']);
-    $bt_descricao = htmlspecialchars($_POST['descricao']);
-
-// Exibir os dados coletados
-    
-    echo "<h2>Dados Recebidos:</h2>";
-    echo "Nome: " . $bt_nome . "<br>";
-    echo "Valor: " . $bt_valor . "<br>";
-    echo "Descriçao: " . $bt_descricao . "<br>";
-
-                    
-    }
-
 ?>
 
 
@@ -109,7 +86,7 @@ $conn->close();
             display: block;
             margin: 10px 0 5px;
         }
-        input[type="text"], input[type="file"], textarea {
+        input[type="text"], input[type="file"], textarea, input[type="number"] {
             width: 100%;
             padding: 10px;
             margin-bottom: 10px;
@@ -132,7 +109,7 @@ $conn->close();
 <body>
     <div class="container">
         <h1>Cadastro de Lanche</h1>
-        <form action="/cadastrar_lanche" method="post" enctype="multipart/form-data">
+        <form action="cadastrar_lanche.php" method="post" enctype="multipart/form-data">
 
             <label for="imagem">Imagem do Lanche:</label>
             <input class="form-control" type="file" id="imagem" name="bt_imagem" accept="image/*">
@@ -140,11 +117,11 @@ $conn->close();
             <label for="nome">Nome do Lanche:</label>
             <input class="form-control" type="text" id="nome" name="bt_nome" required>
 
-            <label for="tipo">Valor:</label>
+            <label for="valor">Valor:</label>
             <input class="form-control" type="number" id="valor" name="bt_valor" required>
 
             <label for="descricao">Descrição:</label>
-            <textarea class="form-control" type="text" id="descricao" name="bt_descricao" required></textarea>
+            <textarea class="form-control" id="descricao" name="bt_descricao" required></textarea>
 
             <input type="submit" value="Cadastrar">
         </form>
